@@ -12,9 +12,10 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MyController {
-
+	
 	/**
-	 * component name 组件名称
+	 * component name
 	 */
 	String value() default "";
+	
 }
