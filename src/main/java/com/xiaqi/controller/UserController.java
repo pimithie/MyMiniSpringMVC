@@ -30,7 +30,7 @@ public class UserController {
 		if (service.login(username, password)) {
 			response.getWriter().write("你好！ "+username);
 		} else {
-			response.getWriter().write("密码错误");
+			response.getWriter().write("密码错误"+username);
 		}
 	}
 	

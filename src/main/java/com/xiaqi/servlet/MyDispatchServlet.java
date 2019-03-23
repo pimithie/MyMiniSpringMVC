@@ -3,7 +3,9 @@ package com.xiaqi.servlet;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.xiaqi.annotation.MyAutowired;
 import com.xiaqi.annotation.MyController;
 import com.xiaqi.annotation.MyRequestMapping;
+import com.xiaqi.annotation.MyRequestParam;
 import com.xiaqi.annotation.MyService;
 
 /**
@@ -43,7 +46,7 @@ public class MyDispatchServlet extends HttpServlet {
 	private final List<Class<?>> allComponentsClass = new ArrayList<Class<?>>();
 
 	/**
-	 * save all handler mapping
+	 * save all handler mapping 保存所有的handler映射
 	 */
 	private final Map<String, Method> handlerMapping = new HashMap<String, Method>();
 
@@ -75,7 +78,36 @@ public class MyDispatchServlet extends HttpServlet {
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
+		// retrieve the request path 获取请求路径
+		// /context/user/login
+		String requestPath = req.getRequestURI();
+		// /user/login
+		String handlerPath = requestPath.replace(req.getContextPath(), "");
+		Method method = handlerMapping.get(handlerPath);
+		// retrieve method parameters 取得方法的参数
+		Parameter[] parameters = method.getParameters();
+		Object[] args = new Object[parameters.length];
+		int index = 0;
+		for (Parameter parameter : parameters) {
+			if (parameter.isAnnotationPresent(MyRequestParam.class)) {
+				MyRequestParam annotation = parameter.getAnnotation(MyRequestParam.class);
+				String requestParamName = annotation.value();
+				args[index++] = req.getParameter(requestParamName);
+			} else if (parameter.getType().isAssignableFrom(HttpServletRequest.class)) {
+				args[index++] = req;
+			} else if (parameter.getType().isAssignableFrom(HttpServletResponse.class)) {
+				args[index++] = resp;
+			}
+		}
+		// invoke the method
+		char[] chs = method.getDeclaringClass().getSimpleName().toCharArray();
+		chs[0] = Character.toLowerCase(chs[0]);
+		Object instance = componentMapping.get(new String(chs));
+		try {
+			method.invoke(instance, args);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
