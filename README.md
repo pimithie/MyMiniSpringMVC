@@ -14,8 +14,8 @@
 ---
 启动流程图：
 
-![startup](assets\启动流程.png)
+![startup](assets\startUp.png)
 
 处理请求流程图：
 
-![process request](assets\处理请求流程.png)
+![process request](assets\processRequest.png)
