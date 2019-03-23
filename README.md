@@ -14,8 +14,8 @@
 ---
 启动流程图：
 
-![startup](C:\Users\xy\sts-workspace\MyMiniSpringMVC\assets\启动流程.png)
+![startup](assets\启动流程.png)
 
 处理请求流程图：
 
-![process request](C:\Users\xy\sts-workspace\MyMiniSpringMVC\assets\处理请求流程.png)
+![process request](assets\处理请求流程.png)
