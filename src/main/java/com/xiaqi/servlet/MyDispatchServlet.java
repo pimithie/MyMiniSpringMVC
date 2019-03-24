@@ -25,6 +25,7 @@ import com.xiaqi.annotation.MyAutowired;
 import com.xiaqi.annotation.MyController;
 import com.xiaqi.annotation.MyRequestMapping;
 import com.xiaqi.annotation.MyRequestParam;
+import com.xiaqi.annotation.MyResponseBody;
 import com.xiaqi.annotation.MyService;
 import com.xiaqi.handlerAdapter.MethodParamsHandlerAdapter;
 
@@ -87,6 +88,12 @@ public class MyDispatchServlet extends HttpServlet {
 		// /user/login
 		String handlerPath = requestPath.replace(request.getContextPath(), "");
 		Method method = handlerMapping.get(handlerPath);
+		if (null == method) {
+			logger.info("find no handler for this url:"+requestPath);
+			response.sendError(HttpServletResponse.SC_NOT_FOUND, "the resource is not found!");
+			return;
+		}
+		logger.info("find handler "+method+" for this url:"+requestPath);
 		// retrieve method parameters 取得方法的参数
 		MethodParamsHandlerAdapter adapter = getBeanByType(MethodParamsHandlerAdapter.class);
 		Object[] args = adapter.getParameters(request, response, method, componentMapping);
@@ -95,8 +102,8 @@ public class MyDispatchServlet extends HttpServlet {
 		chs[0] = Character.toLowerCase(chs[0]);
 		Object instance = componentMapping.get(new String(chs));
 		try {
-			method.invoke(instance, args);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			invokeMethod(instance,method,response,args);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -238,5 +245,20 @@ public class MyDispatchServlet extends HttpServlet {
 			throw new RuntimeException("candidata should have only one.");
 		}
 		return allCandidataBean.get(0);
+	}
+	
+	/**
+	 * invoke the target method
+	 * @throws Exception 
+	 */
+	private void invokeMethod(Object instance, Method method,HttpServletResponse response,Object... args) throws Exception {
+		// check the method annotated by @MyResponseBody
+		Object result = method.invoke(instance, args);
+		if (method.isAnnotationPresent(MyResponseBody.class)) {
+			if (result instanceof String) {
+				response.setContentType("text/html;charset=UTF-8");
+				response.getWriter().write((String)result);
+			}
+		}
 	}
 }

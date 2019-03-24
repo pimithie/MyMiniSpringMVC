@@ -9,6 +9,7 @@ import com.xiaqi.annotation.MyAutowired;
 import com.xiaqi.annotation.MyController;
 import com.xiaqi.annotation.MyRequestMapping;
 import com.xiaqi.annotation.MyRequestParam;
+import com.xiaqi.annotation.MyResponseBody;
 import com.xiaqi.service.UserService;
 
 /**
@@ -22,16 +23,14 @@ public class UserController {
 	@MyAutowired
 	private UserService service;
 
+	@MyResponseBody
 	@MyRequestMapping("/login")
-	public void login(HttpServletRequest request,HttpServletResponse response,
-						@MyRequestParam("username") String username,@MyRequestParam("password") String password) throws IOException {
-		
-		response.setContentType("text/html;charset=UTF-8");
+	public String login(@MyRequestParam("username") String username,
+					    @MyRequestParam("password") String password) throws IOException {
 		if (service.login(username, password)) {
-			response.getWriter().write("你好！ "+username);
-		} else {
-			response.getWriter().write("密码错误"+username);
+			return "你好！"+username;
 		}
+		return "用户名或密码错误！";
 	}
 	
 }

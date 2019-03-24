@@ -19,3 +19,28 @@
 处理请求流程图：
 
 ![process request](assets/processRequest.png)
+---
+##### 效果展示
+1. example code:
+```
+@MyController
+@MyRequestMapping("/user")
+public class UserController {
+	
+	@MyAutowired
+	private UserService service;
+
+	@MyResponseBody
+	@MyRequestMapping("/login")
+	public String login(@MyRequestParam("username") String username,
+					    @MyRequestParam("password") String password) throws IOException {
+		if (service.login(username, password)) {
+			return "你好！"+username;
+		}
+		return "用户名或密码错误！";
+	}
+	
+}
+```
+2. access this url
+![startup](assets/display.png)
