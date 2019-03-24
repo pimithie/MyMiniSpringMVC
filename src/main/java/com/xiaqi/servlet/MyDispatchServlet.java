@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +26,7 @@ import com.xiaqi.annotation.MyController;
 import com.xiaqi.annotation.MyRequestMapping;
 import com.xiaqi.annotation.MyRequestParam;
 import com.xiaqi.annotation.MyService;
+import com.xiaqi.handlerAdapter.MethodParamsHandlerAdapter;
 
 /**
  * my dispatch servlet
@@ -54,8 +56,9 @@ public class MyDispatchServlet extends HttpServlet {
 	public void init() throws ServletException {
 		// scanning basic package to search for the component
 		// 扫描basic package,搜寻组件
-		// -----------先写死，等会换配置文件
-		scanBasicPackage("com.xiaqi");
+		ServletConfig servletConfig = this.getServletConfig();
+		String basicPackage = servletConfig.getInitParameter("basicPackage");
+		scanBasicPackage(basicPackage);
 		try {
 			// instantiation component 实例化组件
 			instantiationComponent();
@@ -72,33 +75,21 @@ public class MyDispatchServlet extends HttpServlet {
 	}
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		doPost(req, resp);
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		doPost(request, response);
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// retrieve the request path 获取请求路径
 		// /context/user/login
-		String requestPath = req.getRequestURI();
+		String requestPath = request.getRequestURI();
 		// /user/login
-		String handlerPath = requestPath.replace(req.getContextPath(), "");
+		String handlerPath = requestPath.replace(request.getContextPath(), "");
 		Method method = handlerMapping.get(handlerPath);
 		// retrieve method parameters 取得方法的参数
-		Parameter[] parameters = method.getParameters();
-		Object[] args = new Object[parameters.length];
-		int index = 0;
-		for (Parameter parameter : parameters) {
-			if (parameter.isAnnotationPresent(MyRequestParam.class)) {
-				MyRequestParam annotation = parameter.getAnnotation(MyRequestParam.class);
-				String requestParamName = annotation.value();
-				args[index++] = req.getParameter(requestParamName);
-			} else if (parameter.getType().isAssignableFrom(HttpServletRequest.class)) {
-				args[index++] = req;
-			} else if (parameter.getType().isAssignableFrom(HttpServletResponse.class)) {
-				args[index++] = resp;
-			}
-		}
+		MethodParamsHandlerAdapter adapter = getBeanByType(MethodParamsHandlerAdapter.class);
+		Object[] args = adapter.getParameters(request, response, method, componentMapping);
 		// invoke the method
 		char[] chs = method.getDeclaringClass().getSimpleName().toCharArray();
 		chs[0] = Character.toLowerCase(chs[0]);
@@ -224,5 +215,28 @@ public class MyDispatchServlet extends HttpServlet {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * retrieve the specific type bean
+	 * 从容器获取指定类型的bean
+	 * @param cls bean type
+	 * @return the suitable bean
+	 */
+	private <T> T getBeanByType(Class<T> cls) {
+		// save all the candidate bean 保存所有的候选者bean
+		List<T> allCandidataBean = new ArrayList<T>();
+		for (Map.Entry<String, Object> entry:componentMapping.entrySet()) {
+			Object instance = entry.getValue();
+			if (cls.isAssignableFrom(instance.getClass())) {
+				allCandidataBean.add((T)instance);
+				logger.info("retrieve the candidata bean,Class:"+cls+"--->bean:"+instance);
+			}
+		}
+		// check the number of candidate is 1
+		if (1 != allCandidataBean.size()) {
+			throw new RuntimeException("candidata should have only one.");
+		}
+		return allCandidataBean.get(0);
 	}
 }

@@ -6,6 +6,11 @@
   <servlet>
   	<servlet-name>myDispatchServlet</servlet-name>
   	<servlet-class>com.xiaqi.servlet.MyDispatchServlet</servlet-class>
+  	<!-- config the basic package -->
+  	<init-param>
+  		<param-name>basicPackage</param-name>
+  		<param-value>com.xiaqi</param-value>
+  	</init-param>
   	<load-on-startup>1</load-on-startup>
   </servlet>
   <servlet-mapping>
