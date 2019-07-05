@@ -10,6 +10,7 @@ import com.xiaqi.annotation.MyController;
 import com.xiaqi.annotation.MyRequestMapping;
 import com.xiaqi.annotation.MyRequestParam;
 import com.xiaqi.annotation.MyResponseBody;
+import com.xiaqi.entity.User;
 import com.xiaqi.service.UserService;
 
 /**
@@ -32,5 +33,12 @@ public class UserController {
 		}
 		return "用户名或密码错误！";
 	}
+	
+	@MyResponseBody
+	@MyRequestMapping("/getUserById")
+	public User getUserById(int userId) {
+		
+	}
+	
 	
 }

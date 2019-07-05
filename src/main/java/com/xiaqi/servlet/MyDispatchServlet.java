@@ -21,6 +21,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.xiaqi.HandleMethodReturnValueHandler.FastJsonHandlerMethodReturnValueHandler;
+import com.xiaqi.HandleMethodReturnValueHandler.HandlerMethodReturnValueHandler;
 import com.xiaqi.annotation.MyAutowired;
 import com.xiaqi.annotation.MyController;
 import com.xiaqi.annotation.MyRequestMapping;
@@ -247,6 +249,17 @@ public class MyDispatchServlet extends HttpServlet {
 		return allCandidataBean.get(0);
 	}
 	
+	private <T> List<T> getBeansByType(Class<T> cls) {
+		List<T> res = new ArrayList<T>();
+		for (Map.Entry<String, Object> entry: componentMapping.entrySet()) {
+			Object temp;
+			if (cls.isAssignableFrom((temp = entry.getValue()).getClass())) {
+				res.add((T) temp);
+			}
+		}
+		return res;
+	}
+	
 	/**
 	 * invoke the target method
 	 * @throws Exception 
@@ -255,9 +268,14 @@ public class MyDispatchServlet extends HttpServlet {
 		// check the method annotated by @MyResponseBody
 		Object result = method.invoke(instance, args);
 		if (method.isAnnotationPresent(MyResponseBody.class)) {
-			if (result instanceof String) {
-				response.setContentType("text/html;charset=UTF-8");
-				response.getWriter().write((String)result);
+			List<HandlerMethodReturnValueHandler> handlers = getBeansByType(HandlerMethodReturnValueHandler.class);
+			for (HandlerMethodReturnValueHandler handler : handlers) {
+				// TODO: 应该增加一个优先级排序,spring Ordered接口或者注解
+				if (handler.canHandle(result.getClass()) && !(handler instanceof FastJsonHandlerMethodReturnValueHandler)) {
+					logger.info("find an HandlerMethodReturnValueHandler to process the return value:"+handler);
+					handler.handle(result, response);
+					return;
+				}
 			}
 		}
 	}

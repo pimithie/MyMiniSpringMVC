@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
+ * strategy interface
  * argument resolver 参数解析器
  * @author xiaqi
  * @param <T> the type of parameter while is resolved 被解析的参数类型
