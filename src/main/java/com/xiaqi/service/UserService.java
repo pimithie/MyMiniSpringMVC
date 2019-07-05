@@ -14,9 +14,9 @@ public interface UserService {
 	
 	/**
 	 * according to the id to find the user
-	 * @param userId
-	 * @return
+	 * 	根据userId寻找用户
+	 * @param userId 用户id
 	 */
-	User getUserById(int userId)
+	public User getUserById(int userId);
 	
 }

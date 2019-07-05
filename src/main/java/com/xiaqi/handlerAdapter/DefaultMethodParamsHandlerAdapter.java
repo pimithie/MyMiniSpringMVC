@@ -32,6 +32,9 @@ public class DefaultMethodParamsHandlerAdapter implements MethodParamsHandlerAda
 			for (ArgumentResolver resolver : resolvers) {
 				if (resolver.isMatch(parameter)) {
 					result[paramIndex++] = resolver.resolve(request, response, parameter);
+					if (int.class == parameter.getType()) {
+						result[paramIndex-1] = Integer.parseInt((String) result[paramIndex-1]);
+					}
 				}
 			}
 		}

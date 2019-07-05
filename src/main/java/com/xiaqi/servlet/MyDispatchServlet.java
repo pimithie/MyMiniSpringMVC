@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +100,7 @@ public class MyDispatchServlet extends HttpServlet {
 		// retrieve method parameters 取得方法的参数
 		MethodParamsHandlerAdapter adapter = getBeanByType(MethodParamsHandlerAdapter.class);
 		Object[] args = adapter.getParameters(request, response, method, componentMapping);
+		//	TODO:参数类型必要转化
 		// invoke the method
 		char[] chs = method.getDeclaringClass().getSimpleName().toCharArray();
 		chs[0] = Character.toLowerCase(chs[0]);
@@ -269,6 +271,7 @@ public class MyDispatchServlet extends HttpServlet {
 		Object result = method.invoke(instance, args);
 		if (method.isAnnotationPresent(MyResponseBody.class)) {
 			List<HandlerMethodReturnValueHandler> handlers = getBeansByType(HandlerMethodReturnValueHandler.class);
+			HandlerMethodReturnValueHandler<Object> jsonReturnValHandler = null;
 			for (HandlerMethodReturnValueHandler handler : handlers) {
 				// TODO: 应该增加一个优先级排序,spring Ordered接口或者注解
 				if (handler.canHandle(result.getClass()) && !(handler instanceof FastJsonHandlerMethodReturnValueHandler)) {
@@ -276,7 +279,12 @@ public class MyDispatchServlet extends HttpServlet {
 					handler.handle(result, response);
 					return;
 				}
+				if (handler instanceof FastJsonHandlerMethodReturnValueHandler) {
+					jsonReturnValHandler = handler;
+				}
 			}
+			// no suitable return value handler
+			jsonReturnValHandler.handle(result, response);
 		}
 	}
 }

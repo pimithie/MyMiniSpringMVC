@@ -36,8 +36,8 @@ public class UserController {
 	
 	@MyResponseBody
 	@MyRequestMapping("/getUserById")
-	public User getUserById(int userId) {
-		
+	public User getUserById(@MyRequestParam("userId") int userId) {
+		return service.getUserById(userId);
 	}
 	
 	
